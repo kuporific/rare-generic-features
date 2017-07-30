@@ -1,13 +1,18 @@
 package com.implementsblog.gencon;
 
+import com.github.javaparser.ast.body.ConstructorDeclaration;
+import com.github.javaparser.ast.nodeTypes.NodeWithTypeParameters;
 import com.github.javaparser.ast.type.TypeParameter;
 import io.vavr.Tuple2;
 import org.testng.annotations.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 
@@ -16,26 +21,24 @@ import static org.hamcrest.Matchers.hasSize;
  */
 public class ApiTest {
 
-    private final Main m = new Main(Paths.get("src/test/java/com/implementsblog/gencon/sample"));
-
     @Test
     public void testGenericDeclarationsOnConstructors() {
-        assertThat(m.getAllGenericDeclarationsOnConstructors(), hasSize(4));
+        final Main m = new Main(Paths.get("src/test/java/com/implementsblog/gencon/sample/Example1.java"));
+        List<Tuple2<Path, List<ConstructorDeclaration>>> allGenericDeclarationsOnConstructors = m.getAllGenericDeclarationsOnConstructors();
+        assertThat(allGenericDeclarationsOnConstructors, hasSize(1));
+        assertThat(allGenericDeclarationsOnConstructors.get(0)._2(), hasSize(4));
     }
 
     @Test
     public void testGenericDeclarationsWithAnnotations() {
-        List<Tuple2<Path, List<TypeParameter>>> allGenericDeclarationsWithAnnotations = m.getAllGenericDeclarationsWithAnnotations();
-        allGenericDeclarationsWithAnnotations.stream().forEach(tuple -> {
-            System.out.println(tuple._1());
-            tuple._2().stream().forEach(typeParameter -> {
-                System.out.println("\t" + typeParameter.asString());
-            });
-        });
-        assertThat(allGenericDeclarationsWithAnnotations, hasSize(6));
+        Main m = new Main(Paths.get("src/test/java/com/implementsblog/gencon/sample/Example2.java"));
+        List<Tuple2<Path, List<NodeWithTypeParameters<?>>>> allGenericDeclarationsWithAnnotations = m.getAllGenericDeclarationsWithAnnotations();
+        assertThat(allGenericDeclarationsWithAnnotations, hasSize(1));
+        assertThat(allGenericDeclarationsWithAnnotations.get(0)._2(), hasSize(6));
     }
 
     public void futureTests() {
+        final Main m = new Main(Paths.get("src/test/java/com/implementsblog/gencon/sample"));
         m.getAllGenericDeclarationsWithSuperQualifier();
         m.getAllGenericDeclarationsWithMultitypeDeclarations();
     }
