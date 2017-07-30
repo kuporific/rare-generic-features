@@ -23,7 +23,7 @@ public class ApiTest {
 
     @Test
     public void testGenericDeclarationsOnConstructors() {
-        final Main m = new Main(Paths.get("src/test/java/com/implementsblog/gencon/sample/Example1.java"));
+        final Main m = new Main(Paths.get("src/test/java/com/implementsblog/gencon/sample/example1"));
         List<Tuple2<Path, List<ConstructorDeclaration>>> allGenericDeclarationsOnConstructors = m.getAllGenericDeclarationsOnConstructors();
         assertThat(allGenericDeclarationsOnConstructors, hasSize(1));
         assertThat(allGenericDeclarationsOnConstructors.get(0)._2(), hasSize(4));
@@ -31,15 +31,29 @@ public class ApiTest {
 
     @Test
     public void testGenericDeclarationsWithAnnotations() {
-        Main m = new Main(Paths.get("src/test/java/com/implementsblog/gencon/sample/Example2.java"));
+        Main m = new Main(Paths.get("src/test/java/com/implementsblog/gencon/sample/example2"));
         List<Tuple2<Path, List<NodeWithTypeParameters<?>>>> allGenericDeclarationsWithAnnotations = m.getAllGenericDeclarationsWithAnnotations();
-        assertThat(allGenericDeclarationsWithAnnotations, hasSize(1));
-        assertThat(allGenericDeclarationsWithAnnotations.get(0)._2(), hasSize(6));
+        prettyPrint(allGenericDeclarationsWithAnnotations);
+        assertThat(allGenericDeclarationsWithAnnotations, hasSize(3));
+        assertThat(allGenericDeclarationsWithAnnotations.get(0)._2(), hasSize(5));
+        assertThat(allGenericDeclarationsWithAnnotations.get(1)._2(), hasSize(5));
+        assertThat(allGenericDeclarationsWithAnnotations.get(2)._2(), hasSize(4));
     }
 
     public void futureTests() {
         final Main m = new Main(Paths.get("src/test/java/com/implementsblog/gencon/sample"));
         m.getAllGenericDeclarationsWithSuperQualifier();
         m.getAllGenericDeclarationsWithMultitypeDeclarations();
+    }
+
+    private void prettyPrint(List<Tuple2<Path, List<NodeWithTypeParameters<?>>>> data) {
+        data.forEach(tuple2 -> {
+            System.out.println("===========");
+            System.out.println(tuple2._1());
+            tuple2._2().forEach(listItem -> {
+                System.out.println("-------------");
+                System.out.println(listItem);
+            });
+        });
     }
 }

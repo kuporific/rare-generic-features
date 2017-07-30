@@ -5,6 +5,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.nodeTypes.NodeWithTypeParameters;
+import com.github.javaparser.ast.type.Type;
 import com.google.common.collect.Streams;
 import io.vavr.Tuple2;
 import io.vavr.control.Either;
@@ -14,10 +15,8 @@ import java.io.UncheckedIOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
@@ -77,8 +76,8 @@ public class Main {
                 .collect(toList());
     }
 
-    public List<Tuple2<Path, List<NodeWithTypeParameters<?>>>>
-    findGenericDeclarationsWithAnnotations(
+    private List<Tuple2<Path, List<NodeWithTypeParameters<?>>>>
+    findGenericDeclarations(
             List<Tuple2<Path, CompilationUnit>> fileToCompilationUnit) {
         return fileToCompilationUnit
                 .stream()
@@ -92,6 +91,49 @@ public class Main {
                                         Stream.of(classOrInterfaceDeclaration),
                                         classOrInterfaceDeclaration.getMethods().stream(),
                                         classOrInterfaceDeclaration.getConstructors().stream()))
+                                .collect(toList())))
+                .collect(toList());
+    }
+
+    private List<Tuple2<Path, List<NodeWithTypeParameters<?>>>>
+    findGenericDeclarationsWithAnnotations(
+            List<Tuple2<Path, CompilationUnit>> fileToCompilationUnit) {
+        return findGenericDeclarations(fileToCompilationUnit)
+                .stream()
+                .map(tuple -> tuple.map2(nodesWithTypeParameters
+                        -> nodesWithTypeParameters
+                        .stream()
+                        .filter(nodeWithTypeParameters
+                                -> nodeWithTypeParameters
+                                .getTypeParameters()
+                                .stream()
+                                .map(Type::getAnnotations)
+                                .anyMatch(annotationExprs -> annotationExprs != null && !annotationExprs.isEmpty()))
+                        .collect(toList())))
+                .filter(tuple -> !tuple._2().isEmpty())
+                .collect(toList());
+    }
+
+    private List<Tuple2<Path, List<NodeWithTypeParameters<?>>>>
+    findGenericDeclarationsWithSuperQualifier(
+            List<Tuple2<Path, CompilationUnit>> fileToCompilationUnit) {
+        return fileToCompilationUnit
+                .stream()
+                .map(tuple -> tuple.map2(compilationUnit ->
+                        compilationUnit
+                                .getTypes()
+                                .stream()
+                                .filter(ClassOrInterfaceDeclaration.class::isInstance)
+                                .map(typeDeclaration -> (ClassOrInterfaceDeclaration) typeDeclaration)
+                                .flatMap(classOrInterfaceDeclaration -> Streams.<NodeWithTypeParameters<?>>concat(
+                                        Stream.of(classOrInterfaceDeclaration),
+                                        classOrInterfaceDeclaration.getMethods().stream(),
+                                        classOrInterfaceDeclaration.getConstructors().stream()))
+                                .filter(nodeWithTypeParameters
+                                        -> nodeWithTypeParameters
+                                        .getTypeParameters()
+                                        .stream()
+                                        .allMatch(typeParameter -> typeParameter.getTypeBound() != null))
                                 .collect(toList())))
                 .collect(toList());
     }
