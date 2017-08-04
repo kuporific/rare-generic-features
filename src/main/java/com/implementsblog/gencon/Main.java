@@ -37,7 +37,7 @@ public class Main {
         List<Tuple2<Path, CompilationUnit>> fileToCompilationUnit = allFilesToCompilationUnits(rootDir);
         this.allGenericDeclarationsOnConstructors = findAllGenericConstructors(fileToCompilationUnit);
         this.allGenericDeclarationsWithAnnotations = findGenericDeclarationsWithAnnotations(fileToCompilationUnit);
-        this.allGenericUsagesWithAnnotations = null;
+        this.allGenericUsagesWithAnnotations = findGenericUsagesWithAnnotations(fileToCompilationUnit);
         this.allGenericDeclarationsWithMultitypeDeclarations = findGenericDeclarationsWithMultitypeDeclarations(fileToCompilationUnit);
     }
 
@@ -116,6 +116,13 @@ public class Main {
                         .collect(toList())))
                 .filter(tuple -> !tuple._2().isEmpty())
                 .collect(toList());
+    }
+
+
+    private List<Tuple2<Path, List<NodeWithTypeParameters<?>>>>
+    findGenericUsagesWithAnnotations(
+            List<Tuple2<Path, CompilationUnit>> fileToCompilationUnit) {
+        return null;
     }
 
     private List<Tuple2<Path, List<NodeWithTypeParameters<?>>>>

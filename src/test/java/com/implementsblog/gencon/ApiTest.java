@@ -38,7 +38,7 @@ public class ApiTest {
 
     @Test
     public void testGenericDeclarationsWithMultitypeDeclarations() {
-        Main m = new Main(Paths.get("src/test/java/com/implementsblog/gencon/sample/example3"));
+        Main m = new Main(Paths.get("src/test/java/com/implementsblog/gencon/sample/example4"));
         List<Tuple2<Path, List<NodeWithTypeParameters<?>>>> allGenericDeclarationsWithAnnotations = m.getAllGenericDeclarationsWithMultitypeDeclarations();
         prettyPrint(allGenericDeclarationsWithAnnotations);
         assertThat(allGenericDeclarationsWithAnnotations, hasSize(1));
@@ -52,7 +52,14 @@ public class ApiTest {
             System.out.println(tuple2._1());
             tuple2._2().forEach(listItem -> {
                 System.out.println("-------------");
-                System.out.println(listItem);
+                String match = listItem.toString();
+                int endOfLineIndex = match.indexOf("\n");
+                System.out.println(
+                        match.substring(
+                                0,
+                                endOfLineIndex != -1
+                                        ? endOfLineIndex
+                                        : match.length()));
             });
         });
         System.out.println("end");
