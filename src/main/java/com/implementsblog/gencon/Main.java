@@ -4,9 +4,6 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
-import com.github.javaparser.ast.nodeTypes.NodeWithTypeParameters;
-import com.github.javaparser.ast.type.TypeParameter;
-import com.google.common.collect.Streams;
 import io.vavr.Tuple2;
 import io.vavr.control.Either;
 
@@ -15,6 +12,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,21 +26,14 @@ import static java.util.stream.Collectors.toList;
  */
 public class Main {
 
-    private final List<Tuple2<Path, List<ConstructorDeclaration>>> allGenericDeclarationsOnConstructors;
-//    private final List<Tuple2<Path, List<NodeWithTypeParameters<?>>>> allGenericDeclarationsWithAnnotations;
-//    private final List<?> allGenericUsagesWithAnnotations;
-//    private final List<Tuple2<Path, List<NodeWithTypeParameters<?>>>> allGenericDeclarationsWithMultitypeDeclarations;
+    private final Path rootDir;
 
     public Main(Path rootDir) {
-        List<Tuple2<Path, CompilationUnit>> fileToCompilationUnit = allFilesToCompilationUnits(rootDir);
-        this.allGenericDeclarationsOnConstructors = findAllGenericConstructors(fileToCompilationUnit);
-//        this.allGenericDeclarationsWithAnnotations = findGenericDeclarationsWithAnnotations(fileToCompilationUnit);
-//        this.allGenericUsagesWithAnnotations = findGenericUsagesWithAnnotations(fileToCompilationUnit);
-//        this.allGenericDeclarationsWithMultitypeDeclarations = findGenericDeclarationsWithMultitypeDeclarations(fileToCompilationUnit);
+        this.rootDir = rootDir;
     }
 
-    public List<Tuple2<Path, List<ConstructorDeclaration>>> getAllGenericDeclarationsOnConstructors() {
-        return allGenericDeclarationsOnConstructors;
+    public Stream<Tuple2<Path, List<ConstructorDeclaration>>> getAllGenericDeclarationsOnConstructors() {
+        return findAllGenericConstructors(allFilesToCompilationUnits(rootDir));
     }
 
 //    public List<Tuple2<Path, List<NodeWithTypeParameters<?>>>> getAllGenericDeclarationsWithAnnotations() {
@@ -57,14 +48,12 @@ public class Main {
 //        return allGenericDeclarationsWithMultitypeDeclarations;
 //    }
 
-    public List<Tuple2<Path, List<ConstructorDeclaration>>>
+    public Stream<Tuple2<Path, List<ConstructorDeclaration>>>
     findAllGenericConstructors(
-            List<Tuple2<Path, CompilationUnit>> fileToCompilationUnit) {
+            Stream<Tuple2<Path, CompilationUnit>> fileToCompilationUnit) {
         return fileToCompilationUnit
-                .stream()
                 .map(tuple -> tuple.map2(this::findConstructorsWithParameters))
-                .filter(pathListTuple2 -> !pathListTuple2._2().isEmpty())
-                .collect(toList());
+                .filter(pathListTuple2 -> !pathListTuple2._2().isEmpty());
     }
 
     private List<ConstructorDeclaration> findConstructorsWithParameters(CompilationUnit compilationUnit) {
@@ -144,19 +133,18 @@ public class Main {
 //                .collect(toList());
 //    }
 
-    private List<Tuple2<Path, CompilationUnit>> allFilesToCompilationUnits(Path path) {
+    private Stream<Tuple2<Path, CompilationUnit>> allFilesToCompilationUnits(Path path) {
         return findAllFiles(path, ".java")
                 .stream()
                 .map(this::fileToCompilationUnit)
                 .filter(result -> result._2().isRight())
-                .map(rightResults -> rightResults.map2(Either::get))
-                .collect(toList());
+                .map(rightResults -> rightResults.map2(Either::get));
     }
 
     private Tuple2<Path, Either<Exception, CompilationUnit>> fileToCompilationUnit(Path file) {
         try {
             return new Tuple2<>(file, Either.right(JavaParser.parse(file)));
-        } catch (IOException e) {
+        } catch (Exception e) {
             return new Tuple2<>(file, Either.left(e));
         }
     }
@@ -180,5 +168,16 @@ public class Main {
         else {
             return Collections.emptyList();
         }
+    }
+
+    public static void main(String[] args) {
+        Main m = new Main(Paths.get(args[0]));
+        m.getAllGenericDeclarationsOnConstructors()
+                .forEach(pathToDeclarations -> {
+                    System.out.println(pathToDeclarations._1());
+                    pathToDeclarations._2().forEach(constructorDeclaration -> {
+                        System.out.println("\t" + constructorDeclaration.toString());
+                    });
+                });
     }
 }
