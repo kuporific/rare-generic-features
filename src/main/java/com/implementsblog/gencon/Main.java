@@ -29,33 +29,33 @@ import static java.util.stream.Collectors.toList;
 public class Main {
 
     private final List<Tuple2<Path, List<ConstructorDeclaration>>> allGenericDeclarationsOnConstructors;
-    private final List<Tuple2<Path, List<NodeWithTypeParameters<?>>>> allGenericDeclarationsWithAnnotations;
-    private final List<?> allGenericUsagesWithAnnotations;
-    private final List<Tuple2<Path, List<NodeWithTypeParameters<?>>>> allGenericDeclarationsWithMultitypeDeclarations;
+//    private final List<Tuple2<Path, List<NodeWithTypeParameters<?>>>> allGenericDeclarationsWithAnnotations;
+//    private final List<?> allGenericUsagesWithAnnotations;
+//    private final List<Tuple2<Path, List<NodeWithTypeParameters<?>>>> allGenericDeclarationsWithMultitypeDeclarations;
 
     public Main(Path rootDir) {
         List<Tuple2<Path, CompilationUnit>> fileToCompilationUnit = allFilesToCompilationUnits(rootDir);
         this.allGenericDeclarationsOnConstructors = findAllGenericConstructors(fileToCompilationUnit);
-        this.allGenericDeclarationsWithAnnotations = findGenericDeclarationsWithAnnotations(fileToCompilationUnit);
-        this.allGenericUsagesWithAnnotations = findGenericUsagesWithAnnotations(fileToCompilationUnit);
-        this.allGenericDeclarationsWithMultitypeDeclarations = findGenericDeclarationsWithMultitypeDeclarations(fileToCompilationUnit);
+//        this.allGenericDeclarationsWithAnnotations = findGenericDeclarationsWithAnnotations(fileToCompilationUnit);
+//        this.allGenericUsagesWithAnnotations = findGenericUsagesWithAnnotations(fileToCompilationUnit);
+//        this.allGenericDeclarationsWithMultitypeDeclarations = findGenericDeclarationsWithMultitypeDeclarations(fileToCompilationUnit);
     }
 
     public List<Tuple2<Path, List<ConstructorDeclaration>>> getAllGenericDeclarationsOnConstructors() {
         return allGenericDeclarationsOnConstructors;
     }
 
-    public List<Tuple2<Path, List<NodeWithTypeParameters<?>>>> getAllGenericDeclarationsWithAnnotations() {
-        return allGenericDeclarationsWithAnnotations;
-    }
-
-    public List<?> getAllGenericUsagesWithAnnotations() {
-        return allGenericUsagesWithAnnotations;
-    }
-
-    public List<Tuple2<Path, List<NodeWithTypeParameters<?>>>> getAllGenericDeclarationsWithMultitypeDeclarations() {
-        return allGenericDeclarationsWithMultitypeDeclarations;
-    }
+//    public List<Tuple2<Path, List<NodeWithTypeParameters<?>>>> getAllGenericDeclarationsWithAnnotations() {
+//        return allGenericDeclarationsWithAnnotations;
+//    }
+//
+//    public List<?> getAllGenericUsagesWithAnnotations() {
+//        return allGenericUsagesWithAnnotations;
+//    }
+//
+//    public List<Tuple2<Path, List<NodeWithTypeParameters<?>>>> getAllGenericDeclarationsWithMultitypeDeclarations() {
+//        return allGenericDeclarationsWithMultitypeDeclarations;
+//    }
 
     public List<Tuple2<Path, List<ConstructorDeclaration>>>
     findAllGenericConstructors(
@@ -80,69 +80,69 @@ public class Main {
                 .collect(toList());
     }
 
-    private List<Tuple2<Path, List<NodeWithTypeParameters<?>>>>
-    findGenericDeclarations(
-            List<Tuple2<Path, CompilationUnit>> fileToCompilationUnit) {
-        return fileToCompilationUnit
-                .stream()
-                .map(tuple -> tuple.map2(compilationUnit ->
-                        compilationUnit
-                                .getTypes()
-                                .stream()
-                                .filter(ClassOrInterfaceDeclaration.class::isInstance)
-                                .map(typeDeclaration -> (ClassOrInterfaceDeclaration) typeDeclaration)
-                                .flatMap(classOrInterfaceDeclaration -> Streams.<NodeWithTypeParameters<?>>concat(
-                                        Stream.of(classOrInterfaceDeclaration),
-                                        classOrInterfaceDeclaration.getMethods().stream(),
-                                        classOrInterfaceDeclaration.getConstructors().stream()))
-                                .collect(toList())))
-                .collect(toList());
-    }
-
-    private List<Tuple2<Path, List<NodeWithTypeParameters<?>>>>
-    findGenericDeclarationsWithAnnotations(
-            List<Tuple2<Path, CompilationUnit>> fileToCompilationUnit) {
-        return findGenericDeclarations(fileToCompilationUnit)
-                .stream()
-                .map(tuple -> tuple.map2(nodesWithTypeParameters
-                        -> nodesWithTypeParameters
-                        .stream()
-                        .filter(nodeWithTypeParameters
-                                -> nodeWithTypeParameters
-                                .getTypeParameters()
-                                .stream()
-                                .map(TypeParameter::getAnnotations)
-                                .anyMatch(annotationExprs -> annotationExprs != null && !annotationExprs.isEmpty()))
-                        .collect(toList())))
-                .filter(tuple -> !tuple._2().isEmpty())
-                .collect(toList());
-    }
-
-
-    private List<Tuple2<Path, List<NodeWithTypeParameters<?>>>>
-    findGenericUsagesWithAnnotations(
-            List<Tuple2<Path, CompilationUnit>> fileToCompilationUnit) {
-        return null;
-    }
-
-    private List<Tuple2<Path, List<NodeWithTypeParameters<?>>>>
-    findGenericDeclarationsWithMultitypeDeclarations(
-            List<Tuple2<Path, CompilationUnit>> fileToCompilationUnit) {
-        return findGenericDeclarations(fileToCompilationUnit)
-                .stream()
-                .map(tuple -> tuple.map2(nodesWithTypeParameters
-                        -> nodesWithTypeParameters
-                        .stream()
-                        .filter(nodeWithTypeParameters
-                                -> nodeWithTypeParameters
-                                .getTypeParameters()
-                                .stream()
-                                .map(TypeParameter::getTypeBound)
-                                .anyMatch(typeBound -> typeBound!= null && typeBound.size() > 1))
-                        .collect(toList())))
-                .filter(tuple -> !tuple._2().isEmpty())
-                .collect(toList());
-    }
+//    private List<Tuple2<Path, List<NodeWithTypeParameters<?>>>>
+//    findGenericDeclarations(
+//            List<Tuple2<Path, CompilationUnit>> fileToCompilationUnit) {
+//        return fileToCompilationUnit
+//                .stream()
+//                .map(tuple -> tuple.map2(compilationUnit ->
+//                        compilationUnit
+//                                .getTypes()
+//                                .stream()
+//                                .filter(ClassOrInterfaceDeclaration.class::isInstance)
+//                                .map(typeDeclaration -> (ClassOrInterfaceDeclaration) typeDeclaration)
+//                                .flatMap(classOrInterfaceDeclaration -> Streams.<NodeWithTypeParameters<?>>concat(
+//                                        Stream.of(classOrInterfaceDeclaration),
+//                                        classOrInterfaceDeclaration.getMethods().stream(),
+//                                        classOrInterfaceDeclaration.getConstructors().stream()))
+//                                .collect(toList())))
+//                .collect(toList());
+//    }
+//
+//    private List<Tuple2<Path, List<NodeWithTypeParameters<?>>>>
+//    findGenericDeclarationsWithAnnotations(
+//            List<Tuple2<Path, CompilationUnit>> fileToCompilationUnit) {
+//        return findGenericDeclarations(fileToCompilationUnit)
+//                .stream()
+//                .map(tuple -> tuple.map2(nodesWithTypeParameters
+//                        -> nodesWithTypeParameters
+//                        .stream()
+//                        .filter(nodeWithTypeParameters
+//                                -> nodeWithTypeParameters
+//                                .getTypeParameters()
+//                                .stream()
+//                                .map(TypeParameter::getAnnotations)
+//                                .anyMatch(annotationExprs -> annotationExprs != null && !annotationExprs.isEmpty()))
+//                        .collect(toList())))
+//                .filter(tuple -> !tuple._2().isEmpty())
+//                .collect(toList());
+//    }
+//
+//
+//    private List<Tuple2<Path, List<NodeWithTypeParameters<?>>>>
+//    findGenericUsagesWithAnnotations(
+//            List<Tuple2<Path, CompilationUnit>> fileToCompilationUnit) {
+//        return null;
+//    }
+//
+//    private List<Tuple2<Path, List<NodeWithTypeParameters<?>>>>
+//    findGenericDeclarationsWithMultitypeDeclarations(
+//            List<Tuple2<Path, CompilationUnit>> fileToCompilationUnit) {
+//        return findGenericDeclarations(fileToCompilationUnit)
+//                .stream()
+//                .map(tuple -> tuple.map2(nodesWithTypeParameters
+//                        -> nodesWithTypeParameters
+//                        .stream()
+//                        .filter(nodeWithTypeParameters
+//                                -> nodeWithTypeParameters
+//                                .getTypeParameters()
+//                                .stream()
+//                                .map(TypeParameter::getTypeBound)
+//                                .anyMatch(typeBound -> typeBound!= null && typeBound.size() > 1))
+//                        .collect(toList())))
+//                .filter(tuple -> !tuple._2().isEmpty())
+//                .collect(toList());
+//    }
 
     private List<Tuple2<Path, CompilationUnit>> allFilesToCompilationUnits(Path path) {
         return findAllFiles(path, ".java")
