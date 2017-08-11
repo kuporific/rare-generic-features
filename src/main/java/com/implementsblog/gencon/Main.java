@@ -4,6 +4,9 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.ConstructorDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.nodeTypes.NodeWithDeclaration;
+import com.github.javaparser.ast.nodeTypes.NodeWithMembers;
 import io.vavr.Tuple2;
 import io.vavr.control.Either;
 
@@ -13,10 +16,8 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.function.BinaryOperator;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
@@ -34,6 +35,10 @@ public class Main {
 
     public Stream<Tuple2<Path, List<ConstructorDeclaration>>> getAllGenericDeclarationsOnConstructors() {
         return findAllGenericConstructors(allFilesToCompilationUnits(rootDir));
+    }
+
+    public Stream<Tuple2<Path, List<MethodDeclaration>>> getGenericDeclarationsOnMethods() {
+        return findAllGenericMethods(allFilesToCompilationUnits(rootDir));
     }
 
 //    public List<Tuple2<Path, List<NodeWithTypeParameters<?>>>> getAllGenericDeclarationsWithAnnotations() {
@@ -56,6 +61,13 @@ public class Main {
                 .filter(pathListTuple2 -> !pathListTuple2._2().isEmpty());
     }
 
+    public Stream<Tuple2<Path, List<MethodDeclaration>>>
+    findAllGenericMethods(Stream<Tuple2<Path, CompilationUnit>> fileToCompilationUnit) {
+        return fileToCompilationUnit
+                .map(tuple -> tuple.map2(this::findMethodsWithGenericParameters))
+                .filter(pathListTuple2 -> !pathListTuple2._2().isEmpty());
+    }
+
     private List<ConstructorDeclaration> findConstructorsWithParameters(CompilationUnit compilationUnit) {
         return compilationUnit
                 .getTypes()
@@ -66,6 +78,16 @@ public class Main {
                 .flatMap(Collection::stream)
                 .filter(constructorDeclaration
                         -> constructorDeclaration.getTypeParameters().isNonEmpty())
+                .collect(toList());
+    }
+
+    private List<MethodDeclaration> findMethodsWithGenericParameters(CompilationUnit compilationUnit) {
+        return compilationUnit
+                .getTypes()
+                .stream()
+                .map(NodeWithMembers::getMethods)
+                .flatMap(Collection::stream)
+                .filter(methodDeclaration -> methodDeclaration.getTypeParameters().isNonEmpty())
                 .collect(toList());
     }
 
@@ -170,14 +192,36 @@ public class Main {
         }
     }
 
-    public static void main(String[] args) {
-        Main m = new Main(Paths.get(args[0]));
-        m.getAllGenericDeclarationsOnConstructors()
-                .forEach(pathToDeclarations -> {
+    public Tuple2<Integer, Integer> toCounts(Stream<? extends Tuple2<Path, ? extends List<? extends NodeWithDeclaration>>> stream) {
+        return stream
+                .peek(pathToDeclarations -> {
                     System.out.println(pathToDeclarations._1());
                     pathToDeclarations._2().forEach(constructorDeclaration -> {
-                        System.out.println("\t" + constructorDeclaration.toString());
+                        Arrays.stream(constructorDeclaration.toString().split("\n"))
+                                .filter(line -> !line.matches("\\s*?/?\\*{1,2}/?.*"))
+                                .limit(10)
+                                .forEach(line -> System.out.println("\t" + line));
+
                     });
-                });
+                })
+                .map(pathListTuple2 -> new Tuple2<>(1, pathListTuple2._2().size()))
+                .reduce(
+                        new Tuple2<>(0, 0),
+                        (count1, count2)
+                                -> new Tuple2<>(
+                                count1._1() + count2._1(),
+                                count1._2() + count2._2()));
     }
+
+
+    public static void main(String[] args) {
+        Main m = new Main(Paths.get(args[0]));
+        Tuple2<Integer, Integer> counts
+                = m.toCounts(m.getGenericDeclarationsOnMethods());
+
+        System.out.println("Total Files: " + counts._1());
+        System.out.println("Total Generic Constructors: " + counts._2());
+    }
+
+
 }
